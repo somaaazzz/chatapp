@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // artificial delay
-const DELAY = 2000;
+const DELAY = Math.random() < 0.6 ? 500 : 2000;
 
 export default function ChatApp() {
   // State for managing messages and input

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
@@ -11,6 +11,14 @@ export default function ChatApp() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [currentUser, setCurrentUser] = useState('');
+  
+  // Ref for the messages container
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Fetch messages on component mount or when users change
   useEffect(() => {
@@ -35,6 +43,11 @@ export default function ChatApp() {
       };
     }
   }, [currentUser]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // Fetch existing messages
   const fetchMessages = async () => {
@@ -70,56 +83,70 @@ export default function ChatApp() {
   };
 
   return (
-    <div className='flex items-center h-screen w-screen'>
-      <div className="max-w-md mx-auto p-4 bg-white shadow-lg rounded-lg">
-        {/* User Configuration Section */}
-        <div className="flex space-x-2 mb-4">
-          <input 
-            type="text"
-            placeholder="名前" 
-            value={currentUser}
-            onChange={(e) => setCurrentUser(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+    <div className='flex flex-col h-screen w-screen bg-gray-100 p-4'>
+      {/* User Configuration Section */}
+      <div className="w-full max-w-4xl mx-auto mb-4">
+        <input 
+          type="text"
+          placeholder="名前を入力してください" 
+          value={currentUser}
+          onChange={(e) => setCurrentUser(e.target.value)}
+          className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+        />
+      </div>
 
-        {/* Messages Display */}
-        <div className="h-96 overflow-y-auto border rounded-md mb-4 p-2 bg-gray-50">
+      {/* Messages Display */}
+      <div className="flex-grow w-full max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="h-full overflow-y-auto p-4 space-y-3">
           {messages.map((msg) => (
             <div 
               key={msg.id} 
-              className={`mb-2 p-2 rounded-md max-w-[80%] ${
+              className={`flex flex-col ${
                 msg.sender === currentUser 
-                  ? 'bg-blue-100 text-right ml-auto' 
-                  : 'bg-gray-200 text-left mr-auto'
+                  ? 'items-end' 
+                  : 'items-start'
               }`}
             >
-              <div className="text-xs text-gray-600 mb-1">{msg.sender}</div>
-              <div>{msg.content}</div>
+              <div 
+                className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                  msg.sender === currentUser 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-200 text-black'
+                }`}
+              >
+                <div className="text-xs opacity-75 mb-1">{msg.sender}</div>
+                <div>{msg.content}</div>
+              </div>
             </div>
           ))}
-        </div>
-
-        {/* Message Input Section */}
-        <div className="flex space-x-2">
-          <input 
-            type="text"
-            placeholder="メッセージを入力してください" 
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={!currentUser}
-          />
-          <button 
-            onClick={sendMessage}
-            disabled={!currentUser || !newMessage.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            送信
-          </button>
+          {/* Invisible div to help with scrolling */}
+          <div ref={messagesEndRef} />
         </div>
       </div>
+
+      {/* Message Input Section */}
+      <div className="w-full max-w-4xl mx-auto mt-4 flex space-x-2">
+        <input 
+          type="text"
+          placeholder="メッセージを入力してください" 
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          className="flex-grow px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+          disabled={!currentUser}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              sendMessage();
+            }
+          }}
+        />
+        <button 
+          onClick={sendMessage}
+          disabled={!currentUser || !newMessage.trim()}
+          className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-lg"
+        >
+          送信
+        </button>
+      </div>
     </div>
-    
   );
 }

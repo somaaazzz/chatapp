@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// latency
+const MS = 2000;
+
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -67,6 +70,12 @@ export default function ChatApp() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUser) return;
 
+    const start = Date.now();
+    // artificial latency
+    while (Date.now() - start < MS) {
+      // Busy-wait loop to block execution
+    }
+
     const { error } = await supabase
       .from('messages')
       .insert({
@@ -78,7 +87,7 @@ export default function ChatApp() {
     if (error) {
       console.error('Error sending message:', error);
     } else {
-      setNewMessage('');
+      setNewMessage('')
     }
   };
 
@@ -133,11 +142,6 @@ export default function ChatApp() {
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-grow px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
           disabled={!currentUser}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              sendMessage();
-            }
-          }}
         />
         <button 
           onClick={sendMessage}

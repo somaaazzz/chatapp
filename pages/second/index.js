@@ -7,7 +7,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // artificial delay
-const DELAY = Math.random() < 0.5 ? 500 : 2000;
+const DELAY = 2000;
 
 export default function ChatApp() {
   // State for managing messages and input
@@ -34,7 +34,7 @@ export default function ChatApp() {
         .channel('schema-db-changes')
         .on(
           'postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages' },
+          { event: 'INSERT', schema: 'public', table: 'messageswithlatency' },
           (payload) => {
             setMessages((prevMessages) => [...prevMessages, payload.new]);
           }
@@ -56,7 +56,7 @@ export default function ChatApp() {
   // Fetch existing messages
   const fetchMessages = async () => {
     const { data, error } = await supabase
-      .from('messages')
+      .from('messageswithlatency')
       .select('*')
       .order('created_at', { ascending: true });
 
@@ -78,7 +78,7 @@ export default function ChatApp() {
       await new Promise(resolve => setTimeout(resolve, DELAY));
 
       const { error } = await supabase
-        .from('messages')
+        .from('messageswithlatency')
         .insert({
           sender: currentUser,
           content: newMessage,

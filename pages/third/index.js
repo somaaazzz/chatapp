@@ -34,7 +34,7 @@ export default function ChatApp() {
         .channel('schema-db-changes')
         .on(
           'postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages' },
+          { event: 'INSERT', schema: 'public', table: 'messageswithui' },
           (payload) => {
             setMessages((prevMessages) => [...prevMessages, payload.new]);
           }
@@ -56,7 +56,7 @@ export default function ChatApp() {
   // Fetch existing messages
   const fetchMessages = async () => {
     const { data, error } = await supabase
-      .from('messages')
+      .from('messageswithui')
       .select('*')
       .order('created_at', { ascending: true });
 
@@ -78,7 +78,7 @@ export default function ChatApp() {
       await new Promise(resolve => setTimeout(resolve, DELAY));
 
       const { error } = await supabase
-        .from('messages')
+        .from('messageswithui')
         .insert({
           sender: currentUser,
           content: newMessage,
@@ -162,7 +162,7 @@ export default function ChatApp() {
           disabled={!currentUser || !newMessage.trim() || isSending}
           className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-lg"
         >
-          送信
+          {isSending ? '送信中...' : '送信'}
         </button>
       </div>
     </div>

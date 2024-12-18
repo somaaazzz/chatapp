@@ -6,9 +6,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// artificial delay
-const DELAY = Math.random() < 0.5 ? 0 : 2000;
-
 export default function ChatApp() {
   // State for managing messages and input
   const [messages, setMessages] = useState([]);
@@ -75,7 +72,7 @@ export default function ChatApp() {
 
     try {
       // Artificial delay using Promise and setTimeout
-      await new Promise(resolve => setTimeout(resolve, DELAY));
+      await new Promise(resolve => setTimeout(resolve, Math.random() < 0.5 ? 0 : 2000));
 
       const { error } = await supabase
         .from('messages')

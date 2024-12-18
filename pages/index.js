@@ -1,19 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// latency
-const MS = 2000;
-
 // Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// artificial delay
+const DELAY = 2000;
 
 export default function ChatApp() {
   // State for managing messages and input
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [currentUser, setCurrentUser] = useState('');
+  const [isSending, setIsSending] = useState(false);
   
   // Ref for the messages container
   const messagesEndRef = useRef(null);
@@ -68,26 +69,38 @@ export default function ChatApp() {
 
   // Send a new message
   const sendMessage = async () => {
-    if (!newMessage.trim() || !currentUser) return;
+    if (!newMessage.trim() || !currentUser || isSending) return;
 
-    const start = Date.now();
-    // artificial latency
-    while (Date.now() - start < MS) {
-      // Busy-wait loop to block execution
+    setIsSending(true);
+
+    try {
+      // Artificial delay using Promise and setTimeout
+      await new Promise(resolve => setTimeout(resolve, DELAY));
+
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          sender: currentUser,
+          content: newMessage,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error sending message:', error);
+      } else {
+        setNewMessage('');
+      }
+    } catch (err) {
+      console.error('Message sending failed:', err);
+    } finally {
+      setIsSending(false);
     }
+  };
 
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        sender: currentUser,
-        content: newMessage,
-        created_at: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error('Error sending message:', error);
-    } else {
-      setNewMessage('')
+  // Handle key press for sending message
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !isSending) {
+      sendMessage();
     }
   };
 
@@ -140,15 +153,16 @@ export default function ChatApp() {
           placeholder="メッセージを入力してください" 
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
           className="flex-grow px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
-          disabled={!currentUser}
+          disabled={!currentUser || isSending}
         />
         <button 
           onClick={sendMessage}
-          disabled={!currentUser || !newMessage.trim()}
+          disabled={!currentUser || !newMessage.trim() || isSending}
           className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-lg"
         >
-          送信
+          '送信'
         </button>
       </div>
     </div>
